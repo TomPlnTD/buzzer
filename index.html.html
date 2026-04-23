@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Buzzer Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --a: #1D9E75;
+    --a-light: #E1F5EE;
+    --a-dark: #085041;
+    --b: #D85A30;
+    --b-light: #FAECE7;
+    --b-dark: #4A1B0C;
+    --bg: #0e0e0e;
+    --surface: #1a1a1a;
+    --surface2: #252525;
+    --text: #f0f0f0;
+    --muted: #888;
+    --border: rgba(255,255,255,0.08);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── SETUP ── */
+  #setupWrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 10vw, 5rem);
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--a), var(--b));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: .25rem;
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .setup-card h2 {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: .4rem;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .7rem 1rem;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field input:focus { border-color: var(--a); }
+
+  .team-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .team-field input:focus { border-color: var(--a); }
+  .team-field:last-child input:focus { border-color: var(--b); }
+
+  .btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: transform .1s, opacity .15s;
+  }
+  .btn:active { transform: scale(.97); }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--a), #15b87f);
+    color: #fff;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 1.5rem 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .join-row { display: flex; gap: 8px; }
+  .join-row input { flex: 1; }
+  .btn-join {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .7rem 1rem;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .btn-join:hover { background: var(--surface); }
+
+  /* ── MASTER VIEW ── */
+  #masterWrap {
+    display: none;
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .master-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .master-header .logo-sm {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, var(--a), var(--b));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .code-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .3rem .75rem;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+
+  .scores-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .score-card {
+    padding: 1rem;
+    border-radius: 14px;
+    text-align: center;
+  }
+  .score-card.a { background: rgba(29,158,117,.15); border: 1px solid rgba(29,158,117,.3); }
+  .score-card.b { background: rgba(216,90,48,.15); border: 1px solid rgba(216,90,48,.3); }
+  .score-card .sn { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: .25rem; }
+  .score-card.a .sn { color: var(--a); }
+  .score-card.b .sn { color: var(--b); }
+  .score-card .sv {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    line-height: 1;
+  }
+  .score-card.a .sv { color: var(--a); }
+  .score-card.b .sv { color: var(--b); }
+  .vs { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--muted); letter-spacing: 2px; }
+
+  .status-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .status-idle { color: var(--muted); font-size: 14px; text-align: center; }
+
+  .buzz-alert {
+    text-align: center;
+    animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .buzz-alert .bwho {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .buzz-alert .bteam { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-top: .1rem; }
+
+  .master-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .btn-correct {
+    background: rgba(29,158,117,.2);
+    border: 1px solid var(--a);
+    color: var(--a);
+    border-radius: 10px;
+    padding: .8rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-correct:hover { background: rgba(29,158,117,.3); }
+  .btn-correct:disabled { opacity: .3; cursor: not-allowed; }
+
+  .btn-wrong {
+    background: rgba(216,90,48,.15);
+    border: 1px solid var(--b);
+    color: var(--b);
+    border-radius: 10px;
+    padding: .8rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-wrong:hover { background: rgba(216,90,48,.25); }
+  .btn-wrong:disabled { opacity: .3; cursor: not-allowed; }
+
+  .secondary-actions { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+
+  .btn-secondary {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .7rem;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .btn-secondary:hover { background: var(--surface); color: var(--text); }
+
+  .links-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .links-section h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .link-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem .8rem;
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .link-row.a-link { background: rgba(29,158,117,.1); border: 1px solid rgba(29,158,117,.2); }
+  .link-row.b-link { background: rgba(216,90,48,.1); border: 1px solid rgba(216,90,48,.2); }
+  .link-row .lname { font-size: 13px; font-weight: 700; }
+  .link-row.a-link .lname { color: var(--a); }
+  .link-row.b-link .lname { color: var(--b); }
+  .link-row .lurl { font-size: 11px; color: var(--muted); flex: 1; margin: 0 .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .copy-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3rem .6rem;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    transition: color .15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { color: var(--text); }
+
+  .log-section { margin-top: .5rem; }
+  .log-section h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; }
+  .log-entries { display: flex; flex-direction: column; gap: 5px; max-height: 160px; overflow-y: auto; }
+  .log-entry {
+    font-size: 12px;
+    padding: .4rem .7rem;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .log-entry.a-log { background: rgba(29,158,117,.1); color: #5dd4a8; }
+  .log-entry.b-log { background: rgba(216,90,48,.1); color: #e8916b; }
+  .log-entry.sys-log { background: var(--surface2); color: var(--muted); }
+
+  /* ── PLAYER VIEW ── */
+  #playerWrap {
+    display: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .player-inner {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+  }
+
+  .player-inner.team-a { background: #060e0b; }
+  .player-inner.team-b { background: #100704; }
+
+  .team-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: .3rem;
+  }
+  .team-a .team-label { color: var(--a); }
+  .team-b .team-label { color: var(--b); }
+
+  .game-code {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+
+  .buzz-button {
+    width: clamp(200px, 55vw, 280px);
+    height: clamp(200px, 55vw, 280px);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 8vw, 3rem);
+    letter-spacing: 3px;
+    color: #fff;
+    transition: transform .1s, box-shadow .15s;
+    position: relative;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .buzz-button::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .buzz-button:active { transform: scale(.93); }
+
+  .team-a .buzz-button {
+    background: radial-gradient(circle at 35% 35%, #2ed49a, var(--a));
+    box-shadow: 0 0 60px rgba(29,158,117,.4), 0 20px 40px rgba(0,0,0,.5);
+  }
+  .team-a .buzz-button::after { box-shadow: 0 0 0 8px rgba(29,158,117,.25); }
+  .team-a .buzz-button:hover::after { opacity: 1; }
+
+  .team-b .buzz-button {
+    background: radial-gradient(circle at 35% 35%, #f07844, var(--b));
+    box-shadow: 0 0 60px rgba(216,90,48,.4), 0 20px 40px rgba(0,0,0,.5);
+  }
+  .team-b .buzz-button::after { box-shadow: 0 0 0 8px rgba(216,90,48,.25); }
+  .team-b .buzz-button:hover::after { opacity: 1; }
+
+  .buzz-button:disabled {
+    filter: saturate(.2) brightness(.5);
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .player-status {
+    margin-top: 2rem;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-align: center;
+    height: 24px;
+    transition: opacity .3s;
+  }
+  .team-a .player-status { color: var(--a); }
+  .team-b .player-status { color: var(--b); }
+
+  .buzz-flash-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+  }
+  .buzz-flash-overlay.flash {
+    animation: bigFlash .5s ease-out forwards;
+  }
+  @keyframes bigFlash {
+    0% { opacity: .6; }
+    100% { opacity: 0; }
+  }
+  .team-a .buzz-flash-overlay { background: var(--a); }
+  .team-b .buzz-flash-overlay { background: var(--b); }
+
+  /* ── WAITING ── */
+  #waitWrap {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    padding: 2rem;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--a);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #waitWrap p { color: var(--muted); font-size: 14px; letter-spacing: 1px; }
+
+  /* ── ERROR ── */
+  #errorMsg {
+    display: none;
+    position: fixed;
+    top: 1rem; left: 50%;
+    transform: translateX(-50%);
+    background: #3a1010;
+    border: 1px solid #a32d2d;
+    color: #f09595;
+    padding: .7rem 1.25rem;
+    border-radius: 10px;
+    font-size: 13px;
+    z-index: 999;
+    max-width: 90%;
+    text-align: center;
+  }
+
+  .connected-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--a);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+</style>
+</head>
+<body>
+
+<div id="errorMsg"></div>
+
+<!-- WAITING -->
+<div id="waitWrap" style="display:none;flex-direction:column;">
+  <div class="spinner"></div>
+  <p id="waitMsg">Connexion en cours…</p>
+</div>
+
+<!-- SETUP -->
+<div id="setupWrap">
+  <div class="logo">BUZZER</div>
+  <p class="tagline">Quiz en temps réel · Multi-appareils</p>
+
+  <div class="setup-card">
+    <h2>Créer une partie</h2>
+    <div class="team-row">
+      <div class="team-field field">
+        <label style="color:var(--a)">Équipe A</label>
+        <input type="text" id="nameA" placeholder="ex: Les Géants" maxlength="20" value="Équipe A">
+      </div>
+      <div class="team-field field">
+        <label style="color:var(--b)">Équipe B</label>
+        <input type="text" id="nameB" placeholder="ex: Les Titans" maxlength="20" value="Équipe B">
+      </div>
+    </div>
+    <button class="btn btn-start" onclick="createGame()">CRÉER LA PARTIE</button>
+
+    <div class="divider">ou rejoindre</div>
+
+    <div class="join-row">
+      <div class="field" style="flex:1;margin:0">
+        <input type="text" id="joinCode" placeholder="Code de partie (ex: ABC123)" maxlength="8" style="text-transform:uppercase;letter-spacing:3px;font-weight:700">
+      </div>
+      <button class="btn-join" onclick="joinAsSpectator()">Rejoindre</button>
+    </div>
+  </div>
+</div>
+
+<!-- MASTER VIEW -->
+<div id="masterWrap">
+  <div class="master-header">
+    <span class="logo-sm">BUZZER</span>
+    <span class="code-badge" id="masterCodeBadge"></span>
+  </div>
+
+  <div class="scores-row">
+    <div class="score-card a">
+      <div class="sn" id="masterNameA">Équipe A</div>
+      <div class="sv" id="masterScoreA">0</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="score-card b">
+      <div class="sn" id="masterNameB">Équipe B</div>
+      <div class="sv" id="masterScoreB">0</div>
+    </div>
+  </div>
+
+  <div class="status-section" id="statusSection">
+    <div class="status-idle" id="statusIdle">En attente d'un buzzer…</div>
+    <div class="buzz-alert" id="buzzAlert" style="display:none">
+      <div class="bwho" id="alertTeam"></div>
+      <div class="bteam" id="alertTeamName"></div>
+    </div>
+  </div>
+
+  <div class="master-actions">
+    <button class="btn-correct" id="btnCorrect" onclick="judgeRound(true)" disabled>✓ Bonne réponse</button>
+    <button class="btn-wrong" id="btnWrong" onclick="judgeRound(false)" disabled>✗ Mauvaise réponse</button>
+  </div>
+  <div class="secondary-actions">
+    <button class="btn-secondary" onclick="resetRound()">↺ Reset manche</button>
+    <button class="btn-secondary" onclick="endGame()">Terminer</button>
+  </div>
+
+  <div class="links-section">
+    <h3>Liens joueurs <span style="font-size:10px;font-weight:400">— à partager</span></h3>
+    <div class="link-row a-link">
+      <span class="lname">Équipe A</span>
+      <span class="lurl" id="linkA"></span>
+      <button class="copy-btn" onclick="copyLink('A')">Copier</button>
+    </div>
+    <div class="link-row b-link">
+      <span class="lname">Équipe B</span>
+      <span class="lurl" id="linkB"></span>
+      <button class="copy-btn" onclick="copyLink('B')">Copier</button>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <h3><span class="connected-dot"></span>Journal en direct</h3>
+    <div class="log-entries" id="logEntries"></div>
+  </div>
+</div>
+
+<!-- PLAYER VIEW -->
+<div id="playerWrap">
+  <div class="player-inner" id="playerInner">
+    <div class="buzz-flash-overlay" id="buzzFlash"></div>
+    <div class="team-label" id="playerTeamLabel"></div>
+    <div class="game-code" id="playerCodeLabel"></div>
+    <button class="buzz-button" id="buzzBtn" onclick="doBuzz()">BUZZ !</button>
+    <div class="player-status" id="playerStatus"></div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, set, onValue, get, update, push, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+// ── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+// INSTRUCTIONS : Remplace ces valeurs par celles de ton projet Firebase.
+// 1. Va sur https://console.firebase.google.com
+// 2. Crée un projet (ou utilise un existant)
+// 3. Ajoute une application Web (icône </>)
+// 4. Active "Realtime Database" (mode test pendant 30j)
+// 5. Copie-colle ta config ici :
+const firebaseConfig = {
+   apiKey: "AIzaSyBv_VhDMNQXKcaOziW_FvxM_sA-M-Hh3jE",
+  authDomain: "burger-quizz-b0bae.firebaseapp.com",
+  databaseURL: "https://burger-quizz-b0bae-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "burger-quizz-b0bae",
+  storageBucket: "burger-quizz-b0bae.firebasestorage.app",
+  messagingSenderId: "204548275032",
+  appId: "1:204548275032:web:7360bba15da58b2ff6432d"
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// State
+let gameCode = null;
+let myRole = null; // 'master' | 'A' | 'B'
+let gameRef = null;
+let scores = { A: 0, B: 0 };
+let teamNames = { A: 'Équipe A', B: 'Équipe B' };
+let currentBuzz = null;
+
+function showErr(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function show(id) {
+  ['setupWrap','masterWrap','playerWrap','waitWrap'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  target.style.display = id === 'playerWrap' || id === 'waitWrap' ? 'flex' : (id === 'masterWrap' ? 'block' : 'flex');
+}
+
+function wait(msg) {
+  document.getElementById('waitMsg').textContent = msg || 'Chargement…';
+  show('waitWrap');
+}
+
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function buildUrl(role) {
+  const base = window.location.href.split('?')[0];
+  return `${base}?code=${gameCode}&role=${role}`;
+}
+
+// ── CREATE GAME ──────────────────────────────────────────────────────────────
+window.createGame = async function() {
+  const na = document.getElementById('nameA').value.trim() || 'Équipe A';
+  const nb = document.getElementById('nameB').value.trim() || 'Équipe B';
+  gameCode = genCode();
+  wait('Création de la partie…');
+
+  try {
+    await set(ref(db, `games/${gameCode}`), {
+      nameA: na, nameB: nb,
+      scoreA: 0, scoreB: 0,
+      state: 'idle', // idle | buzzed | judged
+      buzzTeam: null, buzzTime: null,
+      round: 1,
+      createdAt: serverTimestamp()
+    });
+    startMaster(na, nb);
+  } catch(e) {
+    showErr('Erreur Firebase : ' + e.message + ' — Vérifie ta config Firebase dans le code.');
+    show('setupWrap');
+  }
+};
+
+function startMaster(na, nb) {
+  myRole = 'master';
+  teamNames.A = na; teamNames.B = nb;
+  gameRef = ref(db, `games/${gameCode}`);
+
+  document.getElementById('masterNameA').textContent = na;
+  document.getElementById('masterNameB').textContent = nb;
+  document.getElementById('masterCodeBadge').textContent = gameCode;
+  document.getElementById('linkA').textContent = buildUrl('A');
+  document.getElementById('linkB').textContent = buildUrl('B');
+
+  show('masterWrap');
+  listenGame();
+  addLog('Partie créée · Code : ' + gameCode, 'sys-log');
+}
+
+// ── JOIN VIA URL ─────────────────────────────────────────────────────────────
+window.joinAsSpectator = async function() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if(code.length < 4) { showErr('Code invalide'); return; }
+  joinGame(code, 'master');
+};
+
+async function joinGame(code, role) {
+  wait('Connexion…');
+  gameCode = code;
+  myRole = role;
+  gameRef = ref(db, `games/${gameCode}`);
+
+  try {
+    const snap = await get(gameRef);
+    if(!snap.exists()) {
+      showErr('Partie introuvable : ' + code);
+      show('setupWrap');
+      return;
+    }
+    const data = snap.val();
+    teamNames.A = data.nameA || 'Équipe A';
+    teamNames.B = data.nameB || 'Équipe B';
+    scores.A = data.scoreA || 0;
+    scores.B = data.scoreB || 0;
+
+    if(role === 'master') {
+      document.getElementById('masterNameA').textContent = teamNames.A;
+      document.getElementById('masterNameB').textContent = teamNames.B;
+      document.getElementById('masterScoreA').textContent = scores.A;
+      document.getElementById('masterScoreB').textContent = scores.B;
+      document.getElementById('masterCodeBadge').textContent = gameCode;
+      document.getElementById('linkA').textContent = buildUrl('A');
+      document.getElementById('linkB').textContent = buildUrl('B');
+      show('masterWrap');
+      listenGame();
+    } else {
+      setupPlayerView(role, data);
+      show('playerWrap');
+      listenGame();
+    }
+  } catch(e) {
+    showErr('Erreur : ' + e.message);
+    show('setupWrap');
+  }
+}
+
+function setupPlayerView(team, data) {
+  const inner = document.getElementById('playerInner');
+  inner.className = 'player-inner team-' + team.toLowerCase();
+  document.getElementById('buzzFlash').className = 'buzz-flash-overlay';
+  document.getElementById('playerTeamLabel').textContent = (team === 'A' ? data.nameA : data.nameB) || ('Équipe ' + team);
+  document.getElementById('playerCodeLabel').textContent = 'Code : ' + gameCode;
+  document.getElementById('buzzBtn').disabled = data.state === 'buzzed';
+  document.getElementById('playerStatus').textContent = data.state === 'buzzed' ? 'Quelqu\'un a déjà buzzé !' : '';
+}
+
+// ── LISTEN ───────────────────────────────────────────────────────────────────
+function listenGame() {
+  onValue(gameRef, (snap) => {
+    if(!snap.exists()) return;
+    const d = snap.val();
+    teamNames.A = d.nameA || 'Équipe A';
+    teamNames.B = d.nameB || 'Équipe B';
+    scores.A = d.scoreA || 0;
+    scores.B = d.scoreB || 0;
+    currentBuzz = d.buzzTeam || null;
+
+    if(myRole === 'master') updateMasterUI(d);
+    else updatePlayerUI(d);
+  });
+}
+
+function updateMasterUI(d) {
+  document.getElementById('masterScoreA').textContent = d.scoreA || 0;
+  document.getElementById('masterScoreB').textContent = d.scoreB || 0;
+  document.getElementById('masterNameA').textContent = d.nameA;
+  document.getElementById('masterNameB').textContent = d.nameB;
+
+  const idle = document.getElementById('statusIdle');
+  const alert = document.getElementById('buzzAlert');
+  const btnC = document.getElementById('btnCorrect');
+  const btnW = document.getElementById('btnWrong');
+
+  if(d.state === 'buzzed' && d.buzzTeam) {
+    idle.style.display = 'none';
+    alert.style.display = 'block';
+    const tname = d.buzzTeam === 'A' ? d.nameA : d.nameB;
+    document.getElementById('alertTeam').textContent = 'BUZZ !';
+    document.getElementById('alertTeamName').textContent = tname;
+    document.getElementById('alertTeam').style.color = d.buzzTeam === 'A' ? 'var(--a)' : 'var(--b)';
+    btnC.disabled = false;
+    btnW.disabled = false;
+  } else {
+    idle.style.display = 'block';
+    alert.style.display = 'none';
+    btnC.disabled = true;
+    btnW.disabled = true;
+  }
+}
+
+function updatePlayerUI(d) {
+  const btn = document.getElementById('buzzBtn');
+  const status = document.getElementById('playerStatus');
+  const flash = document.getElementById('buzzFlash');
+
+  if(d.state === 'buzzed') {
+    const isMine = d.buzzTeam === myRole;
+    btn.disabled = true;
+    if(isMine) {
+      flash.classList.remove('flash');
+      void flash.offsetWidth;
+      flash.classList.add('flash');
+      status.textContent = '🔔 Tu as buzzé !';
+    } else {
+      const other = d.buzzTeam === 'A' ? d.nameA : d.nameB;
+      status.textContent = other + ' a buzzé en premier !';
+    }
+  } else {
+    btn.disabled = false;
+    status.textContent = '';
+  }
+}
+
+// ── BUZZ ─────────────────────────────────────────────────────────────────────
+window.doBuzz = async function() {
+  const btn = document.getElementById('buzzBtn');
+  btn.disabled = true;
+  try {
+    const snap = await get(gameRef);
+    if(!snap.exists()) return;
+    const d = snap.val();
+    if(d.state !== 'idle') {
+      btn.disabled = (d.state === 'buzzed');
+      return;
+    }
+    await update(gameRef, {
+      state: 'buzzed',
+      buzzTeam: myRole,
+      buzzTime: serverTimestamp()
+    });
+    // Log
+    const tname = myRole === 'A' ? d.nameA : d.nameB;
+    await push(ref(db, `games/${gameCode}/log`), {
+      msg: tname + ' a buzzé !',
+      team: myRole,
+      ts: serverTimestamp()
+    });
+  } catch(e) {
+    showErr('Erreur buzz : ' + e.message);
+    btn.disabled = false;
+  }
+};
+
+// ── JUDGE ────────────────────────────────────────────────────────────────────
+window.judgeRound = async function(correct) {
+  if(!currentBuzz) return;
+  const snap = await get(gameRef);
+  const d = snap.val();
+  const tname = currentBuzz === 'A' ? d.nameA : d.nameB;
+
+  const updates = { state: 'idle', buzzTeam: null, buzzTime: null };
+  if(correct) {
+    updates['score' + currentBuzz] = (scores[currentBuzz] || 0) + 1;
+    updates.round = (d.round || 1) + 1;
+    addLog('✓ ' + tname + ' → bonne réponse ! +1 pt', currentBuzz === 'A' ? 'a-log' : 'b-log');
+  } else {
+    addLog('✗ ' + tname + ' → mauvaise réponse', currentBuzz === 'A' ? 'a-log' : 'b-log');
+  }
+  await update(gameRef, updates);
+};
+
+window.resetRound = async function() {
+  await update(gameRef, { state: 'idle', buzzTeam: null, buzzTime: null });
+  addLog('— Manche réinitialisée', 'sys-log');
+};
+
+window.endGame = function() {
+  if(confirm('Terminer la partie ?')) {
+    addLog('Partie terminée.', 'sys-log');
+    setTimeout(() => {
+      window.location.href = window.location.href.split('?')[0];
+    }, 800);
+  }
+};
+
+// ── COPY LINK ────────────────────────────────────────────────────────────────
+window.copyLink = function(team) {
+  const url = buildUrl(team);
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Lien copié !');
+  });
+};
+
+function showToast(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.background = '#0d3a28';
+  el.style.borderColor = 'var(--a)';
+  el.style.color = '#5dd4a8';
+  el.style.display = 'block';
+  setTimeout(() => {
+    el.style.display = 'none';
+    el.style.background = '';
+    el.style.borderColor = '';
+    el.style.color = '';
+  }, 2000);
+}
+
+// ── LOG ──────────────────────────────────────────────────────────────────────
+function addLog(msg, cls) {
+  const list = document.getElementById('logEntries');
+  if(!list) return;
+  const el = document.createElement('div');
+  el.className = 'log-entry ' + (cls || 'sys-log');
+  el.textContent = msg;
+  list.prepend(el);
+}
+
+// ── INIT FROM URL ────────────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const urlCode = params.get('code');
+const urlRole = params.get('role');
+
+if(urlCode && urlRole) {
+  if(urlRole === 'A' || urlRole === 'B') {
+    joinGame(urlCode, urlRole);
+  } else {
+    joinGame(urlCode, 'master');
+  }
+} else {
+  show('setupWrap');
+}
+</script>
+</body>
+</html>
